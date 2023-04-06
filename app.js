@@ -45,7 +45,7 @@ const store = new MongoDBStore({
 })
 
 // using session with express app and socket.io server
-app.use(session({
+const sessionMiddleware = session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
@@ -53,7 +53,8 @@ app.use(session({
         maxAge: 60 * 60 * 60 * 24 * 7 * 365
     },
     store: store
-}))
+})
+app.use(sessionMiddleware)
 
 io.use(function (socket, next) {
   sessionMiddleware(socket.request, socket.request.res || {}, next)
