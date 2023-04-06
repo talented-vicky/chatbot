@@ -11,9 +11,13 @@ const server = http.createServer(app)
 
 const io = socketio(server, { cors: { origin: "*" } })
 
-const formatMessage = require("./utils/formatMessage")
+const formatMessage = require("./utility/messformat")
 
 require('dotenv').config()
+const MONGODB_URI = process.env.MONGODB_URI
+const PORT_NO = process.env.PORT_NO || 3000
+const SESSION_SECRET = process.env.SESSION_SECRET
+
 const bot = "bot"
 
 app.use(CORS())
@@ -23,7 +27,7 @@ const {
   commandMessages,
   getOrderAndQuantity,
   getItemsIndex
-} = require("./utils/order")
+} = require("./utility/order")
 
 const {
   getOrder,
@@ -33,16 +37,16 @@ const {
   currentOrder,
   cancelOrder,
   invalidReply
-} = require("./controller/order")
+} = require("./controllers/order")
 
 const store = new MongoDBStore({
-    uri: process.env.MONGODB_URI,
+    uri: MONGODB_URI,
     collection: "sessions"
 })
 
 // using session with express app and socket.io server
 app.use(session({
-    secret: '456ojhfghjk',
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -57,14 +61,8 @@ io.use(function (socket, next) {
 
 // run when a client connects
 io.on("connection", async (socket) => {
-  console.log(`User ${socket.id} connected`)
+  console.log(`The user: ${socket.id} is now connected`)
   
-
-  /**
-   * socket.request.session becomes available for session storage
-   * due to the express-session middleware that was used and linked
-   * with the socket.io server
-   */
   const session = socket.request.session
 
   // Store order in session
@@ -121,6 +119,4 @@ io.on("connection", async (socket) => {
   })
 })
 
-const PORT = process.env.PORT || 3000
-
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+server.listen(PORT_NO, () => console.log(`Server now running on port: ${PORT_NO}`))
