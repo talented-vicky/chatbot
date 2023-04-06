@@ -1,13 +1,23 @@
-require('dotenv').config()
 const http = require("http")
-const app = require("./app")
+const path = require("path")
+const express = require("express")
+const CORS = require("cors")
 const socketio = require("socket.io")
-const formatMessage = require("./utils/formatMessage")
-const bot = "bot"
+const session = require("express-session")
+const MongoDBStore = require("connect-mongodb-session")(session)
+
+const app = express()
 const server = http.createServer(app)
+
 const io = socketio(server, { cors: { origin: "*" } })
 
-const sessionMiddleware = require("./middleware/expressSession")
+const formatMessage = require("./utils/formatMessage")
+
+require('dotenv').config()
+const bot = "bot"
+
+app.use(CORS())
+app.use(express.static(path.join(__dirname, "public")))
 
 const {
   commandMessages,
@@ -25,8 +35,21 @@ const {
   invalidReply
 } = require("./controller/order")
 
-// using session middleware with express app and socket.io server
-app.use(sessionMiddleware)
+const store = new MongoDBStore({
+    uri: process.env.MONGODB_URI,
+    collection: "sessions"
+})
+
+// using session with express app and socket.io server
+app.use(session({
+    secret: '456ojhfghjk',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 60 * 60 * 60 * 24 * 7 * 365
+    },
+    store: store
+}))
 
 io.use(function (socket, next) {
   sessionMiddleware(socket.request, socket.request.res || {}, next)
