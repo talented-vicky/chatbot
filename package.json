@@ -28,6 +28,9 @@
     "prettier": "2.7.1",
     "supertest": "^6.3.1"
   },
+  "engines": {
+    "node": ">=14 <15"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
